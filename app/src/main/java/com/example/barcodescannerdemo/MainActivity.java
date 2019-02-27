@@ -11,6 +11,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -72,12 +75,22 @@ public class MainActivity extends AppCompatActivity {
         String result = null;
         try {
             result = task.execute(scanResult).get();
+            JSONObject rootObject = new JSONObject(result);
+            Log.d(TAG, "getProductName: "+ rootObject.toString(2));
+            if(rootObject.has("product")){
+                JSONObject productObject = rootObject.getJSONObject("product");
+                if(productObject.has("product_name")){
+                    return productObject.getString("product_name");
+                }
+            }
         } catch (ExecutionException e) {
             Log.e(TAG, "", e);
         } catch (InterruptedException e) {
             Log.e(TAG, "", e);
+        } catch (JSONException e) {
+            Log.e(TAG, "", e);
         }
-        return "";
+        return "Artikel nicht gefunden";
     }
 
     public class HoleDatenTask extends AsyncTask<String,Void,String>{
@@ -86,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             final String baseUrl = "https://world.openfoodfacts.org/api/v0/product/";
             final String requestUrl = baseUrl + strings[0]+".json";
+            // super wichtig -> um die json-url zu finden!!!
+            Log.d(TAG, "doInBackground: " + requestUrl);
             StringBuilder result = new StringBuilder();
             URL url = null;
 
